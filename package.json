@@ -1,5 +1,5 @@
 {
-  "name": "feet_game",
+  "name": "man_morris",
   "private": true,
   "scripts": {
     "build": "turbo run build",
