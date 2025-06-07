@@ -6,7 +6,7 @@ interface Ptype{
     ws:WebSocket
     color:color
 }
-type color="white" | "black"
+type color="white" | "black" | null
 export class Player{
     public id:string
     public roomId:string
@@ -37,6 +37,26 @@ type Piece="white" | "black" | null;
 class  Board{
 // board object with all point
 private positions:Record<Position,Piece>={}
+private static readonly MILL_COMBINATIONS: Position[][] = [
+  // Horizontal mills
+  ["a1", "d1", "g1"],
+  ["b2", "d2", "f2"],
+  ["c3", "d3", "e3"],
+  ["a4", "b4", "c4"],
+  ["e4", "f4", "g4"],
+  ["c5", "d5", "e5"],
+  ["b6", "d6", "f6"],
+  ["a7", "d7", "g7"],
+  // Vertical mills
+  ["a1", "a4", "a7"],
+  ["b2", "b4", "b6"],
+  ["c3", "c4", "c5"],
+  ["d1", "d2", "d3"],
+  ["d5", "d6", "d7"],
+  ["e3", "e4", "e5"],
+  ["f2", "f4", "f6"],
+  ["g1", "g4", "g7"],
+];
 
 constructor() {
     const allPositions = [
@@ -50,7 +70,7 @@ constructor() {
       "e4", "f4", "g4",
       "c5", "d5", "e5",
 
-      // two remining
+      // two remaining
       "b6", "d6", "f6",
       "a7", "d7", "g7"
     ];
@@ -77,8 +97,37 @@ constructor() {
     return this.positions;
   }
 
+
+
+  // Inside Board class
+public isMill(position: Position, color: Piece): boolean {
+  if (!color) return false;
+  
+  for (const mill of Board.MILL_COMBINATIONS) {
+      if (mill.includes(position)) {
+          const isMill = mill.every(pos => this.positions[pos] === color);
+          if (isMill) return true;
+      }
+  }
+  return false;
 }
 
+public getMillPositions(color: Piece): Position[] {
+  const millPositions: Position[] = [];
+  
+  for (const mill of Board.MILL_COMBINATIONS) {
+      const occupied = mill.filter(pos => this.positions[pos] === color).length;
+      if (occupied === 2) {
+          const emptyPos = mill.find(pos => this.positions[pos] !== color);
+          if (emptyPos) {
+              millPositions.push(emptyPos);
+          }
+      }
+  }
+  
+  return [...new Set(millPositions)];
+}
+}
 
 export function genId()
 {
@@ -101,10 +150,18 @@ class Game{
     return this.players.length === 2;
   }
   public getCurrentPlayer(): Player {
-    return this.players[this.currentTurn];
-  }
+    const player = this.players[this.currentTurn];
+    if (!player) {
+        throw new Error('No player found at current turn');
+    }
+    return player;
+}
 
-  public handleMove(position: string, playerId: string) {
+
+private lastMoveFormedMill = false;
+
+
+public handleMove(position: string, playerId: string) {
     const player = this.players.find(p => p.id === playerId);
     if (!player || player !== this.getCurrentPlayer()) return false;
 
@@ -112,24 +169,39 @@ class Game{
     if (!success) return false;
 
     player.placedPieces++;
+    
+    this.lastMoveFormedMill = this.board.isMill(position, player.color);
+    
+    if (!this.lastMoveFormedMill) {
+        this.currentTurn = 1 - this.currentTurn;
+    }
+    
+    return true;
+}
+
+public removePiece(position: string, playerId: string): boolean {
+    const player = this.players.find(p => p.id === playerId);
+    const opponent = this.players[1 - this.players.indexOf(player!)];
+    
+    if (!this.lastMoveFormedMill || player !== this.getCurrentPlayer()) {
+        return false;
+    }
+    
+    const piece = this.board.getState()[position];
+    if (piece !== opponent!.color) {
+        return false;
+    }
+    
+    this.board.placePiece(position, null);
+    this.lastMoveFormedMill = false;
     this.currentTurn = 1 - this.currentTurn;
     return true;
-  }
-
-  public getGameState() {
-    return {
-      board: this.board.getState(),
-      currentTurn: this.players[this.currentTurn].color,
-    };
-  }
+}
 
 }
 
 
-
-
 export class GameManager{
-    
     private games:Map <string,Game>=new Map();
 
     public findOrCreateGame(player: Player): Game {
