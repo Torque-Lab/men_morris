@@ -3,8 +3,7 @@ import { Player } from "./player";
 
 export function genId()
 {
-    const id=(Math.floor((Math.random())*10000)).toString()
-    return id;
+    return Math.floor(Math.random() * 10000).toString();
 }
 
 export enum GamePhase {
@@ -20,7 +19,9 @@ export class Game{
     public board=new Board()
     private currentTurn=0;
     private gamePhase: GamePhase = GamePhase.PLACING;
-    private winner: Player | null = null;
+    private winner: 'white' | 'black' | null = null;
+    private lastMoveFormedMill = false;
+    private lastMillPositions: string[] = [];
 
     public addPlayer(player: Player) {
         if (this.players.length >= 2) throw new Error("Game is full");
@@ -37,8 +38,6 @@ export class Game{
     return player;
 }
 
-private lastMoveFormedMill = false;
-
 private checkWinCondition(): boolean {
     const opponent = this.players[1 - this.currentTurn];
     if (!opponent) return false;
@@ -47,7 +46,7 @@ private checkWinCondition(): boolean {
         .filter(piece => piece === opponent.color).length;
     
     if (opponentPieces < 3) {
-        this.winner = this.getCurrentPlayer();
+        this.winner = this.getCurrentPlayer().color;
         return true;
     }
     return false;
@@ -65,21 +64,25 @@ private updateGamePhase() {
     }
 }
 
-public handleMove(position: string, playerId: string) {
+public handleMove(position: string, playerId: string): boolean {
     const player = this.players.find(p => p.id === playerId);
     if (!player || player !== this.getCurrentPlayer()) return false;
 
     if (this.gamePhase === GamePhase.PLACING) {
+        if (!player.canPlacePiece()) return false;
+
         const success = this.board.placePiece(position, player.color);
         if (!success) return false;
 
-        player.placedPieces++;
+        player.placePiece();
         this.lastMoveFormedMill = this.board.isMill(position, player.color);
-        
+        this.lastMillPositions = [];
+        if (this.lastMoveFormedMill) {
+            this.lastMillPositions = this.board.getMillCombination(position, player.color);
+        }
         if (!this.lastMoveFormedMill) {
             this.currentTurn = 1 - this.currentTurn;
         }
-        
         this.updateGamePhase();
         return true;
     }
@@ -94,15 +97,18 @@ public handleMovement(from: string, to: string, playerId: string): boolean {
         return false;
     }
 
-    const success = this.board.movePiece(from, to, player.color);
+    const isFlying = this.gamePhase === GamePhase.FLYING;
+    const success = this.board.movePiece(from, to, player.color, isFlying);
     if (!success) return false;
 
     this.lastMoveFormedMill = this.board.isMill(to, player.color);
-    
+    this.lastMillPositions = [];
+    if (this.lastMoveFormedMill) {
+        this.lastMillPositions = this.board.getMillCombination(to, player.color);
+    }
     if (!this.lastMoveFormedMill) {
         this.currentTurn = 1 - this.currentTurn;
     }
-
     this.updateGamePhase();
     this.checkWinCondition();
     return true;
@@ -110,14 +116,17 @@ public handleMovement(from: string, to: string, playerId: string): boolean {
 
 public removePiece(position: string, playerId: string): boolean {
     const player = this.players.find(p => p.id === playerId);
-    const opponent = this.players[1 - this.players.indexOf(player!)];
+    if (!player || player !== this.getCurrentPlayer()) return false;
     
-    if (!this.lastMoveFormedMill || player !== this.getCurrentPlayer()) {
+    const opponent = this.players[1 - this.players.indexOf(player)];
+    if (!opponent) return false;
+    
+    if (!this.lastMoveFormedMill) {
         return false;
     }
     
     const piece = this.board.getState()[position];
-    if (piece !== opponent!.color) {
+    if (piece !== opponent.color) {
         return false;
     }
     
@@ -132,10 +141,18 @@ public removePiece(position: string, playerId: string): boolean {
 public getGameState() {
     return {
         board: this.board.getState(),
-        currentPlayer: this.getCurrentPlayer(),
+        currentPlayer: this.getCurrentPlayer().color,
         gamePhase: this.gamePhase,
-        winner: this.winner
+        winner: this.winner,
+        remainingPieces: {
+            white: this.players.find(p => p.color === 'white')?.getRemainingPieces() ?? 9,
+            black: this.players.find(p => p.color === 'black')?.getRemainingPieces() ?? 9
+        }
     };
+}
+
+public getLastMillPositions(): string[] {
+    return this.lastMillPositions;
 }
 
 }
