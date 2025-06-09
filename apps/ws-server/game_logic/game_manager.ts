@@ -22,4 +22,7 @@ export class GameManager{
         this.games.delete(gameId);
     }
 
+    public addGame(game: Game): void {
+        this.games.set(game.id, game);
+    }
 }

@@ -4,7 +4,7 @@ interface PlayerType {
     id: string;
     roomId: string;
     ws: WebSocket;
-    color: 'white' | 'black';
+    color?: 'white' | 'black';
 }
 
 export class Player {
@@ -19,7 +19,7 @@ export class Player {
         this.id = id;
         this.ws = ws;
         this.roomId = roomId;
-        this.color = color;
+        this.color = color || 'white';
         this.placedPieces = 0;
         this.totalPieces = 9;
     }

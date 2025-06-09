@@ -73,10 +73,21 @@ export class Board {
         if (!this.positions.hasOwnProperty(position)) {
             return false;
         }
-        if (this.positions[position] !== null) {
+        if (this.positions[position] !== null && color !== null) {
             return false;
         }
         this.positions[position] = color;
+        return true;
+    }
+
+    public removePiece(position: Position): boolean {
+        if (!this.positions.hasOwnProperty(position)) {
+            return false;
+        }
+        if (this.positions[position] === null) {
+            return false;
+        }
+        this.positions[position] = null;
         return true;
     }
 

@@ -25,9 +25,12 @@ export class Game{
 
     public addPlayer(player: Player) {
         if (this.players.length >= 2) throw new Error("Game is full");
+        if (this.players.length === 1) {
+            player.color = 'black';
+        }
         this.players.push(player);
-      }
-      public startGame(): boolean {
+    }
+    public startGame(): boolean {
     return this.players.length === 2;
   }
   public getCurrentPlayer(): Player {
@@ -129,8 +132,23 @@ public removePiece(position: string, playerId: string): boolean {
     if (piece !== opponent.color) {
         return false;
     }
+
+    // Check if the piece is in a mill
+    const isInMill = this.board.isMill(position, opponent.color);
+    const allOpponentPieces = Object.entries(this.board.getState())
+        .filter(([_, color]) => color === opponent.color)
+        .map(([pos]) => pos);
+    const allOpponentPiecesInMills = allOpponentPieces.every(pos => this.board.isMill(pos, opponent.color));
     
-    this.board.placePiece(position, null);
+    // Only allow removing if piece is not in a mill, or if all pieces are in mills
+    if (isInMill && !allOpponentPiecesInMills) {
+        return false;
+    }
+    
+    // Remove the piece using the dedicated removePiece method
+    const success = this.board.removePiece(position);
+    if (!success) return false;
+
     this.lastMoveFormedMill = false;
     this.currentTurn = 1 - this.currentTurn;
     
