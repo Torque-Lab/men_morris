@@ -1,9 +1,13 @@
+import React from 'react';
 import MorrisBoard from "../../components/MorrisBoard";
 
-export default function GameBoard() {
+const Home: React.FC = () => {
     return (
+        <main>
+            <MorrisBoard />
+        </main>
+    );
+};
 
-            < MorrisBoard/>
-       
-    )
-}
+export default Home;
+
