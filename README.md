@@ -1,84 +1,80 @@
-# Turborepo starter
+# Man Morris Game
 
-This Turborepo starter is maintained by the Turborepo core team.
+This project is an implementation of the classic "Nine Men's Morris" (Man Morris) board game. It is built using Next.js for the frontend and uses WebSockets for real-time multiplayer gameplay.
 
-## Using this example
+## Features
 
-Run the following command:
+- Play Nine Men's Morris online with real-time updates
+- Modern UI built with Next.js
+- Multiplayer support via WebSockets
+- Modular codebase for easy extension
 
-```sh
-npx create-turbo@latest
-```
+## Getting Started
 
-## What's inside?
+### Prerequisites
 
-This Turborepo includes the following packages/apps:
+- Node.js (v18 or higher recommended)
+- pnpm
 
-### Apps and Packages
+### Installation
 
-- `docs`: a [Next.js](https://nextjs.org/) app
-- `web`: another [Next.js](https://nextjs.org/) app
-- `@repo/ui`: a stub React component library shared by both `web` and `docs` applications
-- `@repo/eslint-config`: `eslint` configurations (includes `eslint-config-next` and `eslint-config-prettier`)
-- `@repo/typescript-config`: `tsconfig.json`s used throughout the monorepo
+1. Clone the repository:
+   ```sh
+   git clone <repo-url>
+   cd man_morris
+   ```
+2. Install dependencies:
+   ```sh
+   pnpm install
+   ```
+3. Start the servers:
 
-Each package/app is 100% [TypeScript](https://www.typescriptlang.org/).
+   - Start the WebSocket server:
+     ```sh
+     pnpm --filter ws-server dev
+     ```
+   - Start the HTTP server (if needed):
+     ```sh
+     pnpm --filter http-server dev
+     ```
+   - Start the Next.js web app:
+     ```sh
+     pnpm --filter web dev
+     ```
 
-### Utilities
+4. Open your browser and go to `http://localhost:3000/gameboard` to play.
 
-This Turborepo has some additional tools already setup for you:
+## If You not Know Game Rules, This is for You
 
-- [TypeScript](https://www.typescriptlang.org/) for static type checking
-- [ESLint](https://eslint.org/) for code linting
-- [Prettier](https://prettier.io) for code formatting
+Nine Men's Morris is a strategy board game for two players. The goal is to form "mills" (three of your pieces in a align in row) and reduce your opponent to two pieces or block all their moves.
 
-### Build
+### Game Phases
 
-To build all apps and packages, run the following command:
+1. **Placing Pieces:**
 
-```
-cd my-turborepo
-pnpm build
-```
+   - Players take turns placing one of their 9 pieces on empty spots.
+   - If a player forms a mill (three in a row), they remove one opponent's piece (but can not remove from a oponent mill if exist till they have more than three).
 
-### Develop
+2. **Moving Pieces:**
 
-To develop all apps and packages, run the following command:
+   - After all pieces are placed, players take turns moving their pieces to adjacent empty spots.
+   - Forming a mill allows removing an opponent's piece.
 
-```
-cd my-turborepo
-pnpm dev
-```
+3. **Flying (when a player has 3 pieces left):**
+   - A player with only 3 pieces can move to any empty spot, not just adjacent ones.
 
-### Remote Caching
+### How to Win
 
-> [!TIP]
-> Vercel Remote Cache is free for all plans. Get started today at [vercel.com](https://vercel.com/signup?/signup?utm_source=remote-cache-sdk&utm_campaign=free_remote_cache).
+- Reduce your opponent to two pieces, or
+- Block all their possible moves.
 
-Turborepo can use a technique known as [Remote Caching](https://turborepo.com/docs/core-concepts/remote-caching) to share cache artifacts across machines, enabling you to share build caches with your team and CI/CD pipelines.
+## Project Structure
 
-By default, Turborepo will cache locally. To enable Remote Caching you will need an account with Vercel. If you don't have an account you can [create one](https://vercel.com/signup?utm_source=turborepo-examples), then enter the following commands:
+- `apps/web` - Next.js frontend
+- `apps/ws-server` - WebSocket server for real-time gameplay
+- `apps/http-server` - (Optional) HTTP server
+- `packages/` - Shared code and utilities
 
-```
-cd my-turborepo
-npx turbo login
-```
+## License
 
-This will authenticate the Turborepo CLI with your [Vercel account](https://vercel.com/docs/concepts/personal-accounts/overview).
-
-Next, you can link your Turborepo to your Remote Cache by running the following command from the root of your Turborepo:
-
-```
-npx turbo link
-```
-
-## Useful Links
-
-Learn more about the power of Turborepo:
-
-- [Tasks](https://turborepo.com/docs/crafting-your-repository/running-tasks)
-- [Caching](https://turborepo.com/docs/crafting-your-repository/caching)
-- [Remote Caching](https://turborepo.com/docs/core-concepts/remote-caching)
-- [Filtering](https://turborepo.com/docs/crafting-your-repository/running-tasks#using-filters)
-- [Configuration Options](https://turborepo.com/docs/reference/configuration)
-- [CLI Usage](https://turborepo.com/docs/reference/command-line-reference)
+MIT
